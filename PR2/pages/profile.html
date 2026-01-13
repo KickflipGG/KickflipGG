@@ -1,0 +1,1844 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Личный кабинет | Экзаменационная сессия</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#F5F7FA',
+                        secondary: '#2A4365',
+                        accent: '#3182CE'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['Montserrat', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Montserrat', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-primary min-h-screen flex flex-col">
+    <header class="bg-secondary text-white py-4 shadow-md">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold">Экзаменационная сессия</h1>
+            <div class="flex items-center space-x-4">
+                <button id="themeToggle" class="text-xl">
+                    <i id="themeIcon">☀️</i>
+                </button>
+                <a href="../index.html" class="bg-white text-secondary px-4 py-2 rounded-lg font-medium hover:bg-gray-100 transition">Выйти</a>
+            </div>
+        </div>
+    </header>
+
+    <div class="container mx-auto px-4 py-8 flex flex-col md:flex-row gap-8">
+        <!-- Боковое меню -->
+        <aside class="w-full md:w-64 bg-white rounded-lg shadow-md p-6">
+            <div class="mb-6 pb-4 border-b">
+                <h3 class="text-xl font-bold text-secondary" id="userName">Добро пожаловать,</h3>
+                <p class="text-gray-600 mt-1" id="userRole">Студент</p>
+            </div>
+            
+            <nav>
+                <ul id="menuItems" class="space-y-2">
+                    <!-- Меню будет динамически заполнено в зависимости от роли пользователя -->
+                </ul>
+            </nav>
+        </aside>
+        
+        <!-- Основной контент -->
+        <main class="flex-grow">
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <h2 class="text-2xl font-bold text-secondary mb-4" id="pageTitle">Панель управления</h2>
+                <p class="text-gray-700 mb-6" id="pageDescription">
+                    Добро пожаловать в ваш личный кабинет. Выберите раздел в меню слева для начала работы.
+                </p>
+                
+                <div id="contentArea" class="mt-6">
+                    <!-- Контент будет динамически заполнен в зависимости от роли и выбранного раздела -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="bg-primary p-6 rounded-lg border border-gray-200">
+                            <h3 class="text-xl font-bold text-secondary mb-2">Актуальное расписание</h3>
+                            <p class="text-gray-700">Просмотрите ваше персональное расписание экзаменов на текущую сессию.</p>
+                        </div>
+                        <div class="bg-primary p-6 rounded-lg border border-gray-200">
+                            <h3 class="text-xl font-bold text-secondary mb-2">Ваши оценки</h3>
+                            <p class="text-gray-700">Посмотрите и отслеживайте ваши академические результаты по всем дисциплинам.</p>
+                        </div>
+                        <div class="bg-primary p-6 rounded-lg border border-gray-200">
+                            <h3 class="text-xl font-bold text-secondary mb-2">Статистика успеваемости</h3>
+                            <p class="text-gray-700">Анализируйте вашу успеваемость и получайте рекомендации по улучшению результатов.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <footer class="bg-secondary text-white py-6 mt-auto">
+        <div class="container mx-auto px-4 text-center">
+            <p>© 2025 Экзаменационная сессия. Все права защищены.</p>
+            <p class="mt-2">ГБПОУ НСО «Новосибирский авиационный технический колледж имени Б.С. Галущака»</p>
+        </div>
+    </footer>
+
+    <script src="../js/theme.js"></script>
+    <script>
+        // Глобальные переменные для хранения диаграмм
+        let departmentsChart, semestersChart, rolesChart, activityChart, performanceChart, gradesChart;
+        
+        // Проверка аутентификации
+        if (!localStorage.getItem('isAuthenticated')) {
+            window.location.href = 'login.html';
+        }
+
+        // Получение роли пользователя
+        const userRole = localStorage.getItem('userRole') || 'student';
+        document.getElementById('userRole').textContent = 
+            userRole === 'student' ? 'Студент' : 
+            userRole === 'teacher' ? 'Преподаватель' : 'Сотрудник деканата';
+
+        // Наполнение меню в зависимости от роли
+        const menuItems = document.getElementById('menuItems');
+        
+        if (userRole === 'student') {
+            document.getElementById('userName').textContent = 'Студент Иванов';
+            document.getElementById('pageTitle').textContent = 'Личный кабинет студента';
+            document.getElementById('pageDescription').textContent = 'Добро пожаловать в ваш личный кабинет студента. Здесь вы можете просматривать расписание экзаменов, оценки и подавать апелляции.';
+            
+            menuItems.innerHTML = `
+                <li><a href="#" class="block py-2 px-4 text-accent font-medium rounded hover:bg-gray-100 transition">Моё расписание</a></li>
+                <li><a href="#" class="block py-2 px-4 text-secondary hover:text-accent rounded hover:bg-gray-100 transition">Мои оценки</a></li>
+                <li><a href="#" class="block py-2 px-4 text-secondary hover:text-accent rounded hover:bg-gray-100 transition">Подача апелляции</a></li>
+                <li><a href="bucket.html" class="block py-2 px-4 text-secondary hover:text-accent rounded hover:bg-gray-100 transition">Корзина</a></li>
+            `;
+        } else if (userRole === 'teacher') {
+            document.getElementById('userName').textContent = 'Преподаватель Петров';
+            document.getElementById('pageTitle').textContent = 'Личный кабинет преподавателя';
+            document.getElementById('pageDescription').textContent = 'Добро пожаловать в ваш личный кабинет преподавателя. Здесь вы можете управлять предметами, вносить оценки, формировать ведомости и рассматривать апелляции.';
+            
+            menuItems.innerHTML = `
+                <li><a href="#" class="block py-2 px-4 text-accent font-medium rounded hover:bg-gray-100 transition">Мои предметы</a></li>
+                <li><a href="#" class="block py-2 px-4 text-secondary hover:text-accent rounded hover:bg-gray-100 transition">Внесение оценок</a></li>
+                <li><a href="#" class="block py-2 px-4 text-secondary hover:text-accent rounded hover:bg-gray-100 transition">Ведомости</a></li>
+                <li><a href="#" class="block py-2 px-4 text-secondary hover:text-accent rounded hover:bg-gray-100 transition">Апелляции к рассмотрению</a></li>
+                <li><a href="bucket.html" class="block py-2 px-4 text-secondary hover:text-accent rounded hover:bg-gray-100 transition">Корзина</a></li>
+            `;
+        } else if (userRole === 'dean') {
+            document.getElementById('userName').textContent = 'Сотрудник деканата Сидоров';
+            document.getElementById('pageTitle').textContent = 'Панель управления';
+            document.getElementById('pageDescription').textContent = 'Добро пожаловать в панель управления системой. Здесь вы можете управлять расписанием, реестрами студентов, предметами, пользователями и формировать отчеты.';
+            
+            menuItems.innerHTML = `
+                <li><a href="#" class="block py-2 px-4 text-accent font-medium rounded hover:bg-gray-100 transition">Управление расписанием</a></li>
+                <li><a href="#" class="block py-2 px-4 text-secondary hover:text-accent rounded hover:bg-gray-100 transition">Реестр студентов</a></li>
+                <li><a href="#" class="block py-2 px-4 text-secondary hover:text-accent rounded hover:bg-gray-100 transition">Управление предметами</a></li>
+                <li><a href="#" class="block py-2 px-4 text-secondary hover:text-accent rounded hover:bg-gray-100 transition">Управление пользователями</a></li>
+                <li><a href="#" class="block py-2 px-4 text-secondary hover:text-accent rounded hover:bg-gray-100 transition">Отчётность</a></li>
+                <li><a href="bucket.html" class="block py-2 px-4 text-secondary hover:text-accent rounded hover:bg-gray-100 transition">Корзина</a></li>
+            `;
+        }
+
+        // Обработчик кликов по меню
+        menuItems.addEventListener('click', function(e) {
+            if (e.target.tagName === 'A') {
+                e.preventDefault();
+                // Снимаем выделение со всех пунктов меню
+                document.querySelectorAll('#menuItems a').forEach(link => {
+                    link.classList.remove('text-accent', 'font-medium');
+                    link.classList.add('text-secondary');
+                });
+                // Добавляем выделение на текущий пункт
+                e.target.classList.add('text-accent', 'font-medium');
+                e.target.classList.remove('text-secondary');
+                
+                // Обновляем контент в зависимости от выбранного пункта
+                const menuItemText = e.target.textContent;
+                updateContent(menuItemText);
+            }
+        });
+
+        // Функция обновления контента в зависимости от выбранного пункта меню
+        function updateContent(menuItem) {
+            const contentArea = document.getElementById('contentArea');
+            
+            // Очищаем существующие диаграммы перед обновлением контента
+            destroyCharts();
+            
+            if (userRole === 'student') {
+                if (menuItem === 'Моё расписание') {
+                    contentArea.innerHTML = `
+                        <h3 class="text-xl font-bold text-secondary mb-4">Расписание экзаменов</h3>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+                                <thead class="bg-secondary text-white">
+                                    <tr>
+                                        <th class="py-3 px-4 text-left">Дата</th>
+                                        <th class="py-3 px-4 text-left">Время</th>
+                                        <th class="py-3 px-4 text-left">Предмет</th>
+                                        <th class="py-3 px-4 text-left">Преподаватель</th>
+                                        <th class="py-3 px-4 text-left">Аудитория</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="border-b hover:bg-gray-50">
+                                        <td class="py-3 px-4">15.06.2025</td>
+                                        <td class="py-3 px-4">9:00</td>
+                                        <td class="py-3 px-4">Математический анализ</td>
+                                        <td class="py-3 px-4">Иванов А.Б.</td>
+                                        <td class="py-3 px-4">315</td>
+                                    </tr>
+                                    <tr class="border-b hover:bg-gray-50">
+                                        <td class="py-3 px-4">17.06.2025</td>
+                                        <td class="py-3 px-4">11:00</td>
+                                        <td class="py-3 px-4">Физика</td>
+                                        <td class="py-3 px-4">Петров С.В.</td>
+                                        <td class="py-3 px-4">210</td>
+                                    </tr>
+                                    <tr class="border-b hover:bg-gray-50">
+                                        <td class="py-3 px-4">20.06.2025</td>
+                                        <td class="py-3 px-4">14:00</td>
+                                        <td class="py-3 px-4">Программирование</td>
+                                        <td class="py-3 px-4">Сидорова Е.К.</td>
+                                        <td class="py-3 px-4">405</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                            <p class="text-blue-800">Внимание: расписание может измениться. Следите за обновлениями в системе.</p>
+                        </div>
+                    `;
+                } else if (menuItem === 'Мои оценки') {
+                    contentArea.innerHTML = `
+                        <h3 class="text-xl font-bold text-secondary mb-4">Электронная ведомость</h3>
+                        <div class="overflow-x-auto">
+                            <table class="min-w-full bg-white border border-gray-200 rounded-lg">
+                                <thead class="bg-secondary text-white">
+                                    <tr>
+                                        <th class="py-3 px-4 text-left">Предмет</th>
+                                        <th class="py-3 px-4 text-left">Семестр</th>
+                                        <th class="py-3 px-4 text-left">Преподаватель</th>
+                                        <th class="py-3 px-4 text-left">Оценка</th>
+                                        <th class="py-3 px-4 text-left">Статус</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="border-b hover:bg-gray-50">
+                                        <td class="py-3 px-4">Математический анализ</td>
+                                        <td class="py-3 px-4">4</td>
+                                        <td class="py-3 px-4">Иванов А.Б.</td>
+                                        <td class="py-3 px-4 font-bold">4</td>
+                                        <td class="py-3 px-4"><span class="bg-green-100 text-green-800 px-2 py-1 rounded">Зачтено</span></td>
+                                    </tr>
+                                    <tr class="border-b hover:bg-gray-50">
+                                        <td class="py-3 px-4">Физика</td>
+                                        <td class="py-3 px-4">4</td>
+                                        <td class="py-3 px-4">Петров С.В.</td>
+                                        <td class="py-3 px-4 font-bold">5</td>
+                                        <td class="py-3 px-4"><span class="bg-green-100 text-green-800 px-2 py-1 rounded">Зачтено</span></td>
+                                    </tr>
+                                    <tr class="border-b hover:bg-gray-50">
+                                        <td class="py-3 px-4">Программирование</td>
+                                        <td class="py-3 px-4">4</td>
+                                        <td class="py-3 px-4">Сидорова Е.К.</td>
+                                        <td class="py-3 px-4 font-bold">3</td>
+                                        <td class="py-3 px-4"><span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded">Требуется доработка</span></td>
+                                    </tr>
+                                    <tr class="border-b hover:bg-gray-50">
+                                        <td class="py-3 px-4">Английский язык</td>
+                                        <td class="py-3 px-4">4</td>
+                                        <td class="py-3 px-4">Козлова М.П.</td>
+                                        <td class="py-3 px-4">-</td>
+                                        <td class="py-3 px-4"><span class="bg-gray-100 text-gray-800 px-2 py-1 rounded">В процессе</span></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <div class="mt-6">
+                            <h4 class="text-lg font-bold text-secondary mb-3">Средний балл: 4.0</h4>
+                            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                <p class="text-blue-800">Для подачи апелляции на оценку используйте раздел "Подача апелляции" в меню.</p>
+                            </div>
+                        </div>
+                    `;
+                } else if (menuItem === 'Подача апелляции') {
+                    contentArea.innerHTML = `
+                        <h3 class="text-xl font-bold text-secondary mb-6">Подача апелляции</h3>
+                        <div class="bg-white rounded-lg shadow p-6 border border-gray-200">
+                            <form class="space-y-6">
+                                <div>
+                                    <label class="block text-gray-700 font-medium mb-2">Предмет</label>
+                                    <select class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent">
+                                        <option>Математический анализ</option>
+                                        <option>Физика</option>
+                                        <option>Программирование</option>
+                                        <option>Английский язык</option>
+                                    </select>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-gray-700 font-medium mb-2">Полученная оценка</label>
+                                    <input type="text" value="3" disabled class="w-full px-4 py-3 rounded-lg border border-gray-300 bg-gray-100">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-gray-700 font-medium mb-2">Основание для апелляции</label>
+                                    <textarea rows="4" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent" placeholder="Опишите причину несогласия с оценкой..."></textarea>
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-gray-700 font-medium mb-2">Дополнительные материалы (необязательно)</label>
+                                    <input type="file" class="w-full px-4 py-2 border border-gray-300 rounded-lg">
+                                    <p class="text-sm text-gray-500 mt-1">Можно загрузить файлы с дополнительными материалами (не более 10 МБ)</p>
+                                </div>
+                                
+                                <div class="flex justify-end">
+                                    <button type="submit" class="bg-accent hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 shadow-md">
+                                        Отправить апелляцию
+                                    </button>
+                                </div>
+                            </form>
+                            
+                            <div class="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
+                                <h4 class="font-bold text-blue-800 mb-2">Важная информация:</h4>
+                                <ul class="list-disc pl-5 text-blue-800 space-y-1">
+                                    <li>Апелляция рассматривается в течение 3 рабочих дней</li>
+                                    <li>Вы будете уведомлены о результате рассмотрения в личном кабинете</li>
+                                    <li>После подачи апелляции ее нельзя отредактировать</li>
+                                </ul>
+                            </div>
+                        </div>
+                    `;
+                }
+            } else if (userRole === 'teacher') {
+                if (menuItem === 'Мои предметы') {
+                    contentArea.innerHTML = `
+                        <h3 class="text-xl font-bold text-secondary mb-4">Список дисциплин</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-white rounded-lg shadow p-6 border border-gray-200">
+                                <h4 class="text-lg font-bold text-secondary mb-3">Математический анализ</h4>
+                                <p class="text-gray-700 mb-4">Группа: ПР-24.103</p>
+                                <div class="flex justify-between items-center mb-4">
+                                    <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">Семестр 4</span>
+                                    <span class="text-gray-600 text-sm">Экзамен: 15.06.2025</span>
+                                </div>
+                                <div class="flex space-x-3">
+                                    <button class="bg-accent hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">Ведомость</button>
+                                    <button class="bg-gray-200 hover:bg-gray-300 text-secondary px-4 py-2 rounded-lg transition">Материалы</button>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-lg shadow p-6 border border-gray-200">
+                                <h4 class="text-lg font-bold text-secondary mb-3">Теория вероятностей</h4>
+                                <p class="text-gray-700 mb-4">Группа: ПР-24.102</p>
+                                <div class="flex justify-between items-center mb-4">
+                                    <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">Семестр 4</span>
+                                    <span class="text-gray-600 text-sm">Экзамен: 18.06.2025</span>
+                                </div>
+                                <div class="flex space-x-3">
+                                    <button class="bg-accent hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">Ведомость</button>
+                                    <button class="bg-gray-200 hover:bg-gray-300 text-secondary px-4 py-2 rounded-lg transition">Материалы</button>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-lg shadow p-6 border border-gray-200">
+                                <h4 class="text-lg font-bold text-secondary mb-3">Математическая статистика</h4>
+                                <p class="text-gray-700 mb-4">Группа: ПР-24.104</p>
+                                <div class="flex justify-between items-center mb-4">
+                                    <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm">Семестр 4</span>
+                                    <span class="text-gray-600 text-sm">Экзамен: 22.06.2025</span>
+                                </div>
+                                <div class="flex space-x-3">
+                                    <button class="bg-accent hover:bg-blue-700 text-white px-4 py-2 rounded-lg transition">Ведомость</button>
+                                    <button class="bg-gray-200 hover:bg-gray-300 text-secondary px-4 py-2 rounded-lg transition">Материалы</button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else if (menuItem === 'Внесение оценок') {
+                    contentArea.innerHTML = `
+                        <h3 class="text-xl font-bold text-secondary mb-6">Внесение оценок</h3>
+                        <div class="bg-white rounded-lg shadow p-6 border border-gray-200 mb-8">
+                            <div class="flex justify-between items-center mb-6">
+                                <div>
+                                    <h4 class="text-lg font-bold text-secondary">Математический анализ</h4>
+                                    <p class="text-gray-600">Группа ПР-24.103 | 25 студентов</p>
+                                </div>
+                                <button class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition flex items-center">
+                                    <span class="mr-2">+</span> Добавить студента
+                                </button>
+                            </div>
+                            
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full">
+                                    <thead class="bg-secondary text-white">
+                                        <tr>
+                                            <th class="py-3 px-4 text-left">Студент</th>
+                                            <th class="py-3 px-4 text-left">№ зачетной книжки</th>
+                                            <th class="py-3 px-4 text-left">Посещаемость (%)</th>
+                                            <th class="py-3 px-4 text-left">Курсовая работа</th>
+                                            <th class="py-3 px-4 text-left">Экзамен</th>
+                                            <th class="py-3 px-4 text-left">Итоговая оценка</th>
+                                            <th class="py-3 px-4 text-left">Действия</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="border-b hover:bg-gray-50">
+                                            <td class="py-3 px-4">Иванов Петр С.</td>
+                                            <td class="py-3 px-4">2410315</td>
+                                            <td class="py-3 px-4">92%</td>
+                                            <td class="py-3 px-4">Зачтено</td>
+                                            <td class="py-3 px-4">
+                                                <select class="border rounded px-2 py-1">
+                                                    <option>5</option>
+                                                    <option selected>4</option>
+                                                    <option>3</option>
+                                                    <option>2</option>
+                                                </select>
+                                            </td>
+                                            <td class="py-3 px-4 font-bold">4</td>
+                                            <td class="py-3 px-4">
+                                                <button class="text-blue-600 hover:text-blue-800 mr-2">✏️</button>
+                                                <button class="text-red-600 hover:text-red-800">🗑️</button>
+                                            </td>
+                                        </tr>
+                                        <tr class="border-b hover:bg-gray-50">
+                                            <td class="py-3 px-4">Сидоров Алексей В.</td>
+                                            <td class="py-3 px-4">2410321</td>
+                                            <td class="py-3 px-4">85%</td>
+                                            <td class="py-3 px-4">Зачтено</td>
+                                            <td class="py-3 px-4">
+                                                <select class="border rounded px-2 py-1">
+                                                    <option selected>5</option>
+                                                    <option>4</option>
+                                                    <option>3</option>
+                                                    <option>2</option>
+                                                </select>
+                                            </td>
+                                            <td class="py-3 px-4 font-bold">5</td>
+                                            <td class="py-3 px-4">
+                                                <button class="text-blue-600 hover:text-blue-800 mr-2">✏️</button>
+                                                <button class="text-red-600 hover:text-red-800">🗑️</button>
+                                            </td>
+                                        </tr>
+                                        <tr class="border-b hover:bg-gray-50">
+                                            <td class="py-3 px-4">Козлов Дмитрий И.</td>
+                                            <td class="py-3 px-4">2410335</td>
+                                            <td class="py-3 px-4">78%</td>
+                                            <td class="py-3 px-4">Не зачтено</td>
+                                            <td class="py-3 px-4">
+                                                <select class="border rounded px-2 py-1">
+                                                    <option>5</option>
+                                                    <option>4</option>
+                                                    <option>3</option>
+                                                    <option selected>2</option>
+                                                </select>
+                                            </td>
+                                            <td class="py-3 px-4 font-bold">2</td>
+                                            <td class="py-3 px-4">
+                                                <button class="text-blue-600 hover:text-blue-800 mr-2">✏️</button>
+                                                <button class="text-red-600 hover:text-red-800">🗑️</button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="mt-6 flex justify-end space-x-4">
+                                <button class="bg-gray-300 hover:bg-gray-400 text-secondary font-bold py-2 px-6 rounded-lg transition">
+                                    Отменить
+                                </button>
+                                <button class="bg-accent hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition">
+                                    Сохранить изменения
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                } else if (menuItem === 'Ведомости') {
+                    contentArea.innerHTML = `
+                        <h3 class="text-xl font-bold text-secondary mb-6">Электронные ведомости</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                            <div class="bg-white rounded-lg shadow overflow-hidden border border-gray-200">
+                                <div class="p-4 border-b bg-secondary text-white">
+                                    <h4 class="font-bold">Математический анализ</h4>
+                                    <p class="text-sm opacity-90">Группа ПР-24.103 | 15.06.2025</p>
+                                </div>
+                                <div class="p-4">
+                                    <div class="flex justify-between mb-2">
+                                        <span class="text-gray-700">Студентов:</span>
+                                        <span class="font-medium">25/25</span>
+                                    </div>
+                                    <div class="flex justify-between mb-2">
+                                        <span class="text-gray-700">Средний балл:</span>
+                                        <span class="font-medium text-green-600">4.2</span>
+                                    </div>
+                                    <div class="flex justify-between mb-4">
+                                        <span class="text-gray-700">Статус:</span>
+                                        <span class="bg-yellow-100 text-yellow-800 text-xs px-2 py-1 rounded">В процессе</span>
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <button class="bg-accent hover:bg-blue-700 text-white text-sm px-3 py-1 rounded transition w-full">
+                                            Открыть
+                                        </button>
+                                        <button class="bg-gray-200 hover:bg-gray-300 text-secondary text-sm px-3 py-1 rounded transition">
+                                            Печать
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-lg shadow overflow-hidden border border-gray-200">
+                                <div class="p-4 border-b bg-secondary text-white">
+                                    <h4 class="font-bold">Теория вероятностей</h4>
+                                    <p class="text-sm opacity-90">Группа ПР-24.102 | 18.06.2025</p>
+                                </div>
+                                <div class="p-4">
+                                    <div class="flex justify-between mb-2">
+                                        <span class="text-gray-700">Студентов:</span>
+                                        <span class="font-medium">22/24</span>
+                                    </div>
+                                    <div class="flex justify-between mb-2">
+                                        <span class="text-gray-700">Средний балл:</span>
+                                        <span class="font-medium text-green-600">3.8</span>
+                                    </div>
+                                    <div class="flex justify-between mb-4">
+                                        <span class="text-gray-700">Статус:</span>
+                                        <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">Завершена</span>
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <button class="bg-accent hover:bg-blue-700 text-white text-sm px-3 py-1 rounded transition w-full">
+                                            Открыть
+                                        </button>
+                                        <button class="bg-gray-200 hover:bg-gray-300 text-secondary text-sm px-3 py-1 rounded transition">
+                                            Печать
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-lg shadow overflow-hidden border border-gray-200">
+                                <div class="p-4 border-b bg-secondary text-white">
+                                    <h4 class="font-bold">Математическая статистика</h4>
+                                    <p class="text-sm opacity-90">Группа ПР-24.104 | 22.06.2025</p>
+                                </div>
+                                <div class="p-4">
+                                    <div class="flex justify-between mb-2">
+                                        <span class="text-gray-700">Студентов:</span>
+                                        <span class="font-medium">18/23</span>
+                                    </div>
+                                    <div class="flex justify-between mb-2">
+                                        <span class="text-gray-700">Средний балл:</span>
+                                        <span class="font-medium text-yellow-600">3.5</span>
+                                    </div>
+                                    <div class="flex justify-between mb-4">
+                                        <span class="text-gray-700">Статус:</span>
+                                        <span class="bg-red-100 text-red-800 text-xs px-2 py-1 rounded">Требует внимания</span>
+                                    </div>
+                                    <div class="flex space-x-2">
+                                        <button class="bg-accent hover:bg-blue-700 text-white text-sm px-3 py-1 rounded transition w-full">
+                                            Открыть
+                                        </button>
+                                        <button class="bg-gray-200 hover:bg-gray-300 text-secondary text-sm px-3 py-1 rounded transition">
+                                            Печать
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-8 bg-white rounded-lg shadow p-6 border border-gray-200">
+                            <h4 class="text-lg font-bold text-secondary mb-4">Создание новой ведомости</h4>
+                            <form class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div>
+                                    <label class="block text-gray-700 font-medium mb-2">Предмет</label>
+                                    <select class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent">
+                                        <option>Выберите предмет</option>
+                                        <option>Математический анализ</option>
+                                        <option>Теория вероятностей</option>
+                                        <option>Математическая статистика</option>
+                                        <option>Программирование</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 font-medium mb-2">Группа</label>
+                                    <select class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent">
+                                        <option>Выберите группу</option>
+                                        <option>ПР-24.102</option>
+                                        <option>ПР-24.103</option>
+                                        <option>ПР-24.104</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-gray-700 font-medium mb-2">Дата экзамена</label>
+                                    <input type="date" class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent">
+                                </div>
+                                <div class="md:col-span-2 flex justify-end">
+                                    <button type="submit" class="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-lg transition duration-300 shadow-md">
+                                        Создать ведомость
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    `;
+                } else if (menuItem === 'Апелляции к рассмотрению') {
+                    contentArea.innerHTML = `
+                        <h3 class="text-xl font-bold text-secondary mb-6">Апелляции к рассмотрению</h3>
+                        <div class="bg-white rounded-lg shadow overflow-hidden border border-gray-200">
+                            <table class="min-w-full">
+                                <thead class="bg-secondary text-white">
+                                    <tr>
+                                        <th class="py-3 px-4 text-left">Студент</th>
+                                        <th class="py-3 px-4 text-left">Предмет</th>
+                                        <th class="py-3 px-4 text-left">Оценка</th>
+                                        <th class="py-3 px-4 text-left">Дата подачи</th>
+                                        <th class="py-3 px-4 text-left">Статус</th>
+                                        <th class="py-3 px-4 text-left">Действия</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr class="border-b hover:bg-gray-50">
+                                        <td class="py-3 px-4">Козлов Дмитрий И.</td>
+                                        <td class="py-3 px-4">Математический анализ</td>
+                                        <td class="py-3 px-4 font-bold text-red-600">2</td>
+                                        <td class="py-3 px-4">10.06.2025</td>
+                                        <td class="py-3 px-4"><span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">Новая</span></td>
+                                        <td class="py-3 px-4">
+                                            <button class="bg-accent hover:bg-blue-700 text-white text-sm px-3 py-1 rounded transition">
+                                                Рассмотреть
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr class="border-b hover:bg-gray-50">
+                                        <td class="py-3 px-4">Петров Сергей А.</td>
+                                        <td class="py-3 px-4">Теория вероятностей</td>
+                                        <td class="py-3 px-4 font-bold text-yellow-600">3</td>
+                                        <td class="py-3 px-4">09.06.2025</td>
+                                        <td class="py-3 px-4"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">В процессе</span></td>
+                                        <td class="py-3 px-4">
+                                            <button class="bg-accent hover:bg-blue-700 text-white text-sm px-3 py-1 rounded transition">
+                                                Обновить
+                                            </button>
+                                        </td>
+                                    </tr>
+                                    <tr class="border-b hover:bg-gray-50">
+                                        <td class="py-3 px-4">Смирнова Анна К.</td>
+                                        <td class="py-3 px-4">Программирование</td>
+                                        <td class="py-3 px-4 font-bold text-green-600">4</td>
+                                        <td class="py-3 px-4">08.06.2025</td>
+                                        <td class="py-3 px-4"><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Завершена</span></td>
+                                        <td class="py-3 px-4">
+                                            <button class="bg-gray-300 hover:bg-gray-400 text-secondary text-sm px-3 py-1 rounded transition">
+                                                Просмотреть
+                                            </button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        
+                        <div class="mt-8 bg-white rounded-lg shadow p-6 border border-gray-200">
+                            <h4 class="text-lg font-bold text-secondary mb-4">Рассмотрение апелляции</h4>
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                                <div>
+                                    <h5 class="font-bold mb-2">Информация о студенте:</h5>
+                                    <p><strong>ФИО:</strong> Козлов Дмитрий Иванович</p>
+                                    <p><strong>Группа:</strong> ПР-24.103</p>
+                                    <p><strong>Предмет:</strong> Математический анализ</p>
+                                    <p><strong>Оценка:</strong> <span class="text-red-600 font-bold">2 (неудовлетворительно)</span></p>
+                                </div>
+                                <div>
+                                    <h5 class="font-bold mb-2">Основание для апелляции:</h5>
+                                    <p class="bg-blue-50 p-3 rounded border border-blue-200">
+                                        Студент не согласен с оценкой, так как на экзамене он ответил на дополнительный вопрос, который не был учтен при подсчете итоговой оценки. Также студент представил дополнительные решения задач, которые не были проверены.
+                                    </p>
+                                </div>
+                            </div>
+                            
+                            <div class="mb-6">
+                                <h5 class="font-bold mb-3">Ваше решение по апелляции:</h5>
+                                <div class="space-y-3">
+                                    <label class="flex items-start">
+                                        <input type="radio" name="appealDecision" class="mt-1 text-accent" checked>
+                                        <span class="ml-3">
+                                            <strong>Оставить оценку без изменений</strong><br>
+                                            <span class="text-gray-600 text-sm">Подробное обоснование решения (обязательно)</span>
+                                        </span>
+                                    </label>
+                                    <textarea rows="3" class="w-full ml-7 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent" placeholder="Обоснуйте свое решение...">После рассмотрения дополнительных материалов и проверки решений задач, оценка остается без изменений. Дополнительные решения не соответствовали требованиям задания, а ответ на дополнительный вопрос был частичным.</textarea>
+                                    
+                                    <label class="flex items-start mt-4">
+                                        <input type="radio" name="appealDecision" class="mt-1 text-accent">
+                                        <span class="ml-3">
+                                            <strong>Изменить оценку на</strong>
+                                            <select class="ml-2 border rounded px-2 py-1">
+                                                <option>3</option>
+                                                <option>4</option>
+                                                <option>5</option>
+                                            </select><br>
+                                            <span class="text-gray-600 text-sm">Подробное обоснование решения (обязательно)</span>
+                                        </span>
+                                    </label>
+                                    <textarea rows="3" class="w-full ml-7 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent" disabled></textarea>
+                                </div>
+                            </div>
+                            
+                            <div class="flex justify-end space-x-4">
+                                <button class="bg-gray-300 hover:bg-gray-400 text-secondary font-bold py-2 px-6 rounded-lg transition">
+                                    Отменить
+                                </button>
+                                <button class="bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-6 rounded-lg transition">
+                                    Принять решение
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                }
+            } else if (userRole === 'dean') {
+                if (menuItem === 'Управление расписанием') {
+                    contentArea.innerHTML = `
+                        <h3 class="text-xl font-bold text-secondary mb-6">Расписание экзаменационной сессии</h3>
+                        
+                        <div class="bg-white rounded-lg shadow p-6 border border-gray-200 mb-8">
+                            <div class="flex justify-between items-center mb-6">
+                                <div>
+                                    <h4 class="text-lg font-bold text-secondary">Сессия: Летняя 2025</h4>
+                                    <p class="text-gray-600">Период: 15.06.2025 - 30.06.2025</p>
+                                </div>
+                                <div class="flex space-x-3">
+                                    <button class="bg-gray-200 hover:bg-gray-300 text-secondary px-4 py-2 rounded-lg transition flex items-center">
+                                        <span class="mr-2">📥</span> Импорт
+                                    </button>
+                                    <button class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition flex items-center">
+                                        <span class="mr-2">➕</span> Добавить экзамен
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full">
+                                    <thead class="bg-secondary text-white">
+                                        <tr>
+                                            <th class="py-3 px-4 text-left">Дата</th>
+                                            <th class="py-3 px-4 text-left">Время</th>
+                                            <th class="py-3 px-4 text-left">Предмет</th>
+                                            <th class="py-3 px-4 text-left">Группа</th>
+                                            <th class="py-3 px-4 text-left">Преподаватель</th>
+                                            <th class="py-3 px-4 text-left">Аудитория</th>
+                                            <th class="py-3 px-4 text-left">Действия</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="border-b hover:bg-gray-50">
+                                            <td class="py-3 px-4 font-medium">15.06.2025</td>
+                                            <td class="py-3 px-4">9:00</td>
+                                            <td class="py-3 px-4">Математический анализ</td>
+                                            <td class="py-3 px-4">ПР-24.103</td>
+                                            <td class="py-3 px-4">Иванов А.Б.</td>
+                                            <td class="py-3 px-4">315</td>
+                                            <td class="py-3 px-4">
+                                                <button class="text-blue-600 hover:text-blue-800 mr-2">✏️</button>
+                                                <button class="text-red-600 hover:text-red-800">🗑️</button>
+                                            </td>
+                                        </tr>
+                                        <tr class="border-b hover:bg-gray-50">
+                                            <td class="py-3 px-4 font-medium">15.06.2025</td>
+                                            <td class="py-3 px-4">11:00</td>
+                                            <td class="py-3 px-4">Физика</td>
+                                            <td class="py-3 px-4">ПР-24.102</td>
+                                            <td class="py-3 px-4">Петров С.В.</td>
+                                            <td class="py-3 px-4">210</td>
+                                            <td class="py-3 px-4">
+                                                <button class="text-blue-600 hover:text-blue-800 mr-2">✏️</button>
+                                                <button class="text-red-600 hover:text-red-800">🗑️</button>
+                                            </td>
+                                        </tr>
+                                        <tr class="border-b hover:bg-gray-50">
+                                            <td class="py-3 px-4 font-medium">17.06.2025</td>
+                                            <td class="py-3 px-4">9:00</td>
+                                            <td class="py-3 px-4">Теория вероятностей</td>
+                                            <td class="py-3 px-4">ПР-24.102</td>
+                                            <td class="py-3 px-4">Сидорова Е.К.</td>
+                                            <td class="py-3 px-4">305</td>
+                                            <td class="py-3 px-4">
+                                                <button class="text-blue-600 hover:text-blue-800 mr-2">✏️</button>
+                                                <button class="text-red-600 hover:text-red-800">🗑️</button>
+                                            </td>
+                                        </tr>
+                                        <tr class="border-b hover:bg-gray-50">
+                                            <td class="py-3 px-4 font-medium">17.06.2025</td>
+                                            <td class="py-3 px-4">14:00</td>
+                                            <td class="py-3 px-4">Программирование</td>
+                                            <td class="py-3 px-4">ПР-24.104</td>
+                                            <td class="py-3 px-4">Козлов М.П.</td>
+                                            <td class="py-3 px-4">405</td>
+                                            <td class="py-3 px-4">
+                                                <button class="text-blue-600 hover:text-blue-800 mr-2">✏️</button>
+                                                <button class="text-red-600 hover:text-red-800">🗑️</button>
+                                            </td>
+                                        </tr>
+                                        <tr class="border-b hover:bg-gray-50">
+                                            <td class="py-3 px-4 font-medium">20.06.2025</td>
+                                            <td class="py-3 px-4">11:00</td>
+                                            <td class="py-3 px-4">Математическая статистика</td>
+                                            <td class="py-3 px-4">ПР-24.103, ПР-24.104</td>
+                                            <td class="py-3 px-4">Иванов А.Б.</td>
+                                            <td class="py-3 px-4">310</td>
+                                            <td class="py-3 px-4">
+                                                <button class="text-blue-600 hover:text-blue-800 mr-2">✏️</button>
+                                                <button class="text-red-600 hover:text-red-800">🗑️</button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                            <div class="bg-white rounded-lg shadow p-6 border border-gray-200">
+                                <h4 class="text-lg font-bold text-secondary mb-4">Статистика по аудиториям</h4>
+                                <div class="space-y-3">
+                                    <div>
+                                        <div class="flex justify-between mb-1">
+                                            <span class="text-gray-700">Аудитория 315</span>
+                                            <span class="text-sm text-gray-600">80%</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                            <div class="bg-blue-600 h-2.5 rounded-full" style="width: 80%"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between mb-1">
+                                            <span class="text-gray-700">Аудитория 210</span>
+                                            <span class="text-sm text-gray-600">60%</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                            <div class="bg-blue-600 h-2.5 rounded-full" style="width: 60%"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between mb-1">
+                                            <span class="text-gray-700">Аудитория 305</span>
+                                            <span class="text-sm text-gray-600">75%</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                            <div class="bg-blue-600 h-2.5 rounded-full" style="width: 75%"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between mb-1">
+                                            <span class="text-gray-700">Аудитория 405</span>
+                                            <span class="text-sm text-gray-600">90%</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                            <div class="bg-blue-600 h-2.5 rounded-full" style="width: 90%"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between mb-1">
+                                            <span class="text-gray-700">Аудитория 310</span>
+                                            <span class="text-sm text-gray-600">100%</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                            <div class="bg-blue-600 h-2.5 rounded-full" style="width: 100%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-lg shadow p-6 border border-gray-200">
+                                <h4 class="text-lg font-bold text-secondary mb-4">Конфликты в расписании</h4>
+                                <div class="space-y-4">
+                                    <div class="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+                                        <p class="font-medium text-yellow-800">❗ Предупреждение</p>
+                                        <p>У преподавателя Иванова А.Б. две пары одновременно 17.06.2025 в 9:00 и 11:00.</p>
+                                    </div>
+                                    <div class="bg-red-50 p-4 rounded-lg border border-red-200">
+                                        <p class="font-medium text-red-800">❌ Ошибка</p>
+                                        <p>Аудитория 310 перегружена 20.06.2025 - одновременно запланировано 3 экзамена.</p>
+                                    </div>
+                                    <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                                        <p class="font-medium text-blue-800">ℹ️ Информация</p>
+                                        <p>Группа ПР-24.103 имеет 4 экзамена в течение 2 дней (15-16.06.2025).</p>
+                                    </div>
+                                    <button class="mt-4 bg-accent hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition w-full">
+                                        Автоисправление конфликтов
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else if (menuItem === 'Реестр студентов') {
+                    contentArea.innerHTML = `
+                        <h3 class="text-xl font-bold text-secondary mb-6">Реестр студентов</h3>
+                        
+                        <div class="bg-white rounded-lg shadow p-6 border border-gray-200 mb-8">
+                            <div class="flex justify-between items-center mb-6">
+                                <div class="w-full md:w-1/2">
+                                    <div class="relative">
+                                        <input type="text" placeholder="Поиск по ФИО, группе или зачетной книжке..." 
+                                               class="w-full px-4 py-3 pl-10 pr-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent">
+                                        <div class="absolute left-3 top-3 text-gray-400">
+                                            <span>🔍</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex space-x-3 ml-4">
+                                    <button class="bg-gray-200 hover:bg-gray-300 text-secondary px-4 py-2 rounded-lg transition flex items-center">
+                                        <span class="mr-2">📥</span> Экспорт
+                                    </button>
+                                    <button class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition flex items-center">
+                                        <span class="mr-2">➕</span> Добавить студента
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full">
+                                    <thead class="bg-secondary text-white">
+                                        <tr>
+                                            <th class="py-3 px-4 text-left">№</th>
+                                            <th class="py-3 px-4 text-left">ФИО</th>
+                                            <th class="py-3 px-4 text-left">Группа</th>
+                                            <th class="py-3 px-4 text-left">№ зачетной книжки</th>
+                                            <th class="py-3 px-4 text-left">Год поступления</th>
+                                            <th class="py-3 px-4 text-left">Статус</th>
+                                            <th class="py-3 px-4 text-left">Действия</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="border-b hover:bg-gray-50">
+                                            <td class="py-3 px-4">1</td>
+                                            <td class="py-3 px-4 font-medium">Иванов Петр Сергеевич</td>
+                                            <td class="py-3 px-4">ПР-24.103</td>
+                                            <td class="py-3 px-4">2410315</td>
+                                            <td class="py-3 px-4">2024</td>
+                                            <td class="py-3 px-4"><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Обучается</span></td>
+                                            <td class="py-3 px-4">
+                                                <button class="text-blue-600 hover:text-blue-800 mr-2">✏️</button>
+                                                <button class="text-red-600 hover:text-red-800">🗑️</button>
+                                            </td>
+                                        </tr>
+                                        <tr class="border-b hover:bg-gray-50">
+                                            <td class="py-3 px-4">2</td>
+                                            <td class="py-3 px-4 font-medium">Сидоров Алексей Владимирович</td>
+                                            <td class="py-3 px-4">ПР-24.102</td>
+                                            <td class="py-3 px-4">2410321</td>
+                                            <td class="py-3 px-4">2024</td>
+                                            <td class="py-3 px-4"><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Обучается</span></td>
+                                            <td class="py-3 px-4">
+                                                <button class="text-blue-600 hover:text-blue-800 mr-2">✏️</button>
+                                                <button class="text-red-600 hover:text-red-800">🗑️</button>
+                                            </td>
+                                        </tr>
+                                        <tr class="border-b hover:bg-gray-50">
+                                            <td class="py-3 px-4">3</td>
+                                            <td class="py-3 px-4 font-medium">Козлов Дмитрий Иванович</td>
+                                            <td class="py-3 px-4">ПР-24.103</td>
+                                            <td class="py-3 px-4">2410335</td>
+                                            <td class="py-3 px-4">2024</td>
+                                            <td class="py-3 px-4"><span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">Академ. отпуск</span></td>
+                                            <td class="py-3 px-4">
+                                                <button class="text-blue-600 hover:text-blue-800 mr-2">✏️</button>
+                                                <button class="text-red-600 hover:text-red-800">🗑️</button>
+                                            </td>
+                                        </tr>
+                                        <tr class="border-b hover:bg-gray-50">
+                                            <td class="py-3 px-4">4</td>
+                                            <td class="py-3 px-4 font-medium">Петров Сергей Андреевич</td>
+                                            <td class="py-3 px-4">ПР-24.102</td>
+                                            <td class="py-3 px-4">2410342</td>
+                                            <td class="py-3 px-4">2024</td>
+                                            <td class="py-3 px-4"><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Обучается</span></td>
+                                            <td class="py-3 px-4">
+                                                <button class="text-blue-600 hover:text-blue-800 mr-2">✏️</button>
+                                                <button class="text-red-600 hover:text-red-800">🗑️</button>
+                                            </td>
+                                        </tr>
+                                        <tr class="border-b hover:bg-gray-50">
+                                            <td class="py-3 px-4">5</td>
+                                            <td class="py-3 px-4 font-medium">Смирнова Анна Константиновна</td>
+                                            <td class="py-3 px-4">ПР-24.104</td>
+                                            <td class="py-3 px-4">2410357</td>
+                                            <td class="py-3 px-4">2024</td>
+                                            <td class="py-3 px-4"><span class="bg-red-100 text-red-800 px-2 py-1 rounded text-xs">Отчислена</span></td>
+                                            <td class="py-3 px-4">
+                                                <button class="text-blue-600 hover:text-blue-800 mr-2">✏️</button>
+                                                <button class="text-red-600 hover:text-red-800">🗑️</button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="mt-6 flex justify-between items-center">
+                                <div class="text-gray-600">
+                                    Показано 5 из 85 записей
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button class="px-4 py-2 bg-gray-200 text-secondary rounded-lg hover:bg-gray-300 transition">1</button>
+                                    <button class="px-4 py-2 bg-white border border-gray-300 text-secondary rounded-lg hover:bg-gray-100 transition">2</button>
+                                    <button class="px-4 py-2 bg-white border border-gray-300 text-secondary rounded-lg hover:bg-gray-100 transition">3</button>
+                                    <button class="px-4 py-2 bg-white border border-gray-300 text-secondary rounded-lg hover:bg-gray-100 transition">...</button>
+                                    <button class="px-4 py-2 bg-white border border-gray-300 text-secondary rounded-lg hover:bg-gray-100 transition">17</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div class="bg-white rounded-lg shadow p-6 border border-gray-200">
+                                <h4 class="text-lg font-bold text-secondary mb-4">Статистика по группам</h4>
+                                <div class="space-y-3">
+                                    <div>
+                                        <div class="flex justify-between mb-1">
+                                            <span class="text-gray-700">ПР-24.103</span>
+                                            <span class="text-sm text-gray-600">28 студентов</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                            <div class="bg-blue-600 h-2.5 rounded-full" style="width: 85%"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between mb-1">
+                                            <span class="text-gray-700">ПР-24.102</span>
+                                            <span class="text-sm text-gray-600">25 студентов</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                            <div class="bg-blue-600 h-2.5 rounded-full" style="width: 75%"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between mb-1">
+                                            <span class="text-gray-700">ПР-24.104</span>
+                                            <span class="text-sm text-gray-600">24 студента</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                            <div class="bg-blue-600 h-2.5 rounded-full" style="width: 72%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-lg shadow p-6 border border-gray-200">
+                                <h4 class="text-lg font-bold text-secondary mb-4">Академическая успеваемость</h4>
+                                <div class="space-y-3">
+                                    <div>
+                                        <div class="flex justify-between mb-1">
+                                            <span class="text-gray-700">На хорошем и отлично</span>
+                                            <span class="text-sm text-gray-600">42%</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                            <div class="bg-green-500 h-2.5 rounded-full" style="width: 42%"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between mb-1">
+                                            <span class="text-gray-700">Имеют задолженности</span>
+                                            <span class="text-sm text-gray-600">18%</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                            <div class="bg-yellow-500 h-2.5 rounded-full" style="width: 18%"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between mb-1">
+                                            <span class="text-gray-700">Находятся в академ. отпуске</span>
+                                            <span class="text-sm text-gray-600">5%</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                            <div class="bg-blue-500 h-2.5 rounded-full" style="width: 5%"></div>
+                                        </div>
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-lg shadow p-6 border border-gray-200">
+                                <h4 class="text-lg font-bold text-secondary mb-4">Уровень посещаемости</h4>
+                                <div class="space-y-3">
+                                    <div>
+                                        <div class="flex justify-between mb-1">
+                                            <span class="text-gray-700">Группа ПР-24.103</span>
+                                            <span class="text-sm text-gray-600">87%</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                            <div class="bg-purple-500 h-2.5 rounded-full" style="width: 87%"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between mb-1">
+                                            <span class="text-gray-700">Группа ПР-24.102</span>
+                                            <span class="text-sm text-gray-600">79%</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                            <div class="bg-purple-500 h-2.5 rounded-full" style="width: 79%"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between mb-1">
+                                            <span class="text-gray-700">Группа ПР-24.104</span>
+                                            <span class="text-sm text-gray-600">92%</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                            <div class="bg-purple-500 h-2.5 rounded-full" style="width: 92%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else if (menuItem === 'Управление предметами') {
+                    contentArea.innerHTML = `
+                        <h3 class="text-xl font-bold text-secondary mb-6">Каталог учебных предметов</h3>
+                        
+                        <div class="bg-white rounded-lg shadow p-6 border border-gray-200 mb-8">
+                            <div class="flex justify-between items-center mb-6">
+                                <div class="w-full md:w-1/2">
+                                    <div class="relative">
+                                        <input type="text" placeholder="Поиск по названию предмета или преподавателю..." 
+                                               class="w-full px-4 py-3 pl-10 pr-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent">
+                                        <div class="absolute left-3 top-3 text-gray-400">
+                                            <span>🔍</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex space-x-3 ml-4">
+                                    <button class="bg-gray-200 hover:bg-gray-300 text-secondary px-4 py-2 rounded-lg transition flex items-center">
+                                        <span class="mr-2">📥</span> Экспорт
+                                    </button>
+                                    <button class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition flex items-center">
+                                        <span class="mr-2">➕</span> Добавить предмет
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full">
+                                    <thead class="bg-secondary text-white">
+                                        <tr>
+                                            <th class="py-3 px-4 text-left">№</th>
+                                            <th class="py-3 px-4 text-left">Название предмета</th>
+                                            <th class="py-3 px-4 text-left">Кафедра</th>
+                                            <th class="py-3 px-4 text-left">Семестр</th>
+                                            <th class="py-3 px-4 text-left">Часы</th>
+                                            <th class="py-3 px-4 text-left">Ответственный преподаватель</th>
+                                            <th class="py-3 px-4 text-left">Действия</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="border-b hover:bg-gray-50">
+                                            <td class="py-3 px-4">1</td>
+                                            <td class="py-3 px-4 font-medium">Математический анализ</td>
+                                            <td class="py-3 px-4">Высшая математика</td>
+                                            <td class="py-3 px-4">4</td>
+                                            <td class="py-3 px-4">144</td>
+                                            <td class="py-3 px-4">Иванов А.Б.</td>
+                                            <td class="py-3 px-4">
+                                                <button class="text-blue-600 hover:text-blue-800 mr-2">✏️</button>
+                                                <button class="text-red-600 hover:text-red-800">🗑️</button>
+                                            </td>
+                                        </tr>
+                                        <tr class="border-b hover:bg-gray-50">
+                                            <td class="py-3 px-4">2</td>
+                                            <td class="py-3 px-4 font-medium">Теория вероятностей</td>
+                                            <td class="py-3 px-4">Высшая математика</td>
+                                            <td class="py-3 px-4">4</td>
+                                            <td class="py-3 px-4">72</td>
+                                            <td class="py-3 px-4">Сидорова Е.К.</td>
+                                            <td class="py-3 px-4">
+                                                <button class="text-blue-600 hover:text-blue-800 mr-2">✏️</button>
+                                                <button class="text-red-600 hover:text-red-800">🗑️</button>
+                                            </td>
+                                        </tr>
+                                        <tr class="border-b hover:bg-gray-50">
+                                            <td class="py-3 px-4">3</td>
+                                            <td class="py-3 px-4 font-medium">Физика</td>
+                                            <td class="py-3 px-4">Общая физика</td>
+                                            <td class="py-3 px-4">4</td>
+                                            <td class="py-3 px-4">108</td>
+                                            <td class="py-3 px-4">Петров С.В.</td>
+                                            <td class="py-3 px-4">
+                                                <button class="text-blue-600 hover:text-blue-800 mr-2">✏️</button>
+                                                <button class="text-red-600 hover:text-red-800">🗑️</button>
+                                            </td>
+                                        </tr>
+                                        <tr class="border-b hover:bg-gray-50">
+                                            <td class="py-3 px-4">4</td>
+                                            <td class="py-3 px-4 font-medium">Программирование</td>
+                                            <td class="py-3 px-4">Информатика</td>
+                                            <td class="py-3 px-4">4</td>
+                                            <td class="py-3 px-4">144</td>
+                                            <td class="py-3 px-4">Козлов М.П.</td>
+                                            <td class="py-3 px-4">
+                                                <button class="text-blue-600 hover:text-blue-800 mr-2">✏️</button>
+                                                <button class="text-red-600 hover:text-red-800">🗑️</button>
+                                            </td>
+                                        </tr>
+                                        <tr class="border-b hover:bg-gray-50">
+                                            <td class="py-3 px-4">5</td>
+                                            <td class="py-3 px-4 font-medium">Математическая статистика</td>
+                                            <td class="py-3 px-4">Высшая математика</td>
+                                            <td class="py-3 px-4">4</td>
+                                            <td class="py-3 px-4">72</td>
+                                            <td class="py-3 px-4">Иванов А.Б.</td>
+                                            <td class="py-3 px-4">
+                                                <button class="text-blue-600 hover:text-blue-800 mr-2">✏️</button>
+                                                <button class="text-red-600 hover:text-red-800">🗑️</button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="mt-6 flex justify-between items-center">
+                                <div class="text-gray-600">
+                                    Показано 5 из 32 предметов
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button class="px-4 py-2 bg-gray-200 text-secondary rounded-lg hover:bg-gray-300 transition">1</button>
+                                    <button class="px-4 py-2 bg-white border border-gray-300 text-secondary rounded-lg hover:bg-gray-100 transition">2</button>
+                                    <button class="px-4 py-2 bg-white border border-gray-300 text-secondary rounded-lg hover:bg-gray-100 transition">3</button>
+                                    <button class="px-4 py-2 bg-white border border-gray-300 text-secondary rounded-lg hover:bg-gray-100 transition">...</button>
+                                    <button class="px-4 py-2 bg-white border border-gray-300 text-secondary rounded-lg hover:bg-gray-100 transition">7</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-white rounded-lg shadow p-6 border border-gray-200">
+                                <h4 class="text-lg font-bold text-secondary mb-4">Статистика по кафедрам</h4>
+                                <canvas id="departmentsChart" height="250"></canvas>
+                                <div class="mt-4 grid grid-cols-3 gap-4 text-center">
+                                    <div>
+                                        <p class="font-bold text-secondary">15</p>
+                                        <p class="text-sm text-gray-600">Высшая математика</p>
+                                    </div>
+                                    <div>
+                                        <p class="font-bold text-secondary">8</p>
+                                        <p class="text-sm text-gray-600">Общая физика</p>
+                                    </div>
+                                    <div>
+                                        <p class="font-bold text-secondary">9</p>
+                                        <p class="text-sm text-gray-600">Информатика</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-lg shadow p-6 border border-gray-200">
+                                <h4 class="text-lg font-bold text-secondary mb-4">Распределение по семестрам</h4>
+                                <canvas id="semestersChart" height="250"></canvas>
+                                <div class="mt-4 grid grid-cols-4 gap-2 text-center">
+                                    <div>
+                                        <p class="font-bold text-secondary">3-й</p>
+                                        <p class="text-sm text-gray-600">12 предметов</p>
+                                    </div>
+                                    <div>
+                                        <p class="font-bold text-secondary">4-й</p>
+                                        <p class="text-sm text-gray-600">15 предметов</p>
+                                    </div>
+                                    <div>
+                                        <p class="font-bold text-secondary">5-й</p>
+                                        <p class="text-sm text-gray-600">5 предметов</p>
+                                    </div>
+                                    <div>
+                                        <p class="font-bold text-secondary">Итого</p>
+                                        <p class="text-sm text-gray-600">32 предмета</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else if (menuItem === 'Управление пользователями') {
+                    contentArea.innerHTML = `
+                        <h3 class="text-xl font-bold text-secondary mb-6">Управление пользователями системы</h3>
+                        
+                        <div class="bg-white rounded-lg shadow p-6 border border-gray-200 mb-8">
+                            <div class="flex justify-between items-center mb-6">
+                                <div class="w-full md:w-1/2">
+                                    <div class="relative">
+                                        <input type="text" placeholder="Поиск по ФИО, email или роли..." 
+                                               class="w-full px-4 py-3 pl-10 pr-4 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent">
+                                        <div class="absolute left-3 top-3 text-gray-400">
+                                            <span>🔍</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="flex space-x-3 ml-4">
+                                    <button class="bg-gray-200 hover:bg-gray-300 text-secondary px-4 py-2 rounded-lg transition flex items-center">
+                                        <span class="mr-2">📥</span> Экспорт
+                                    </button>
+                                    <button class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition flex items-center">
+                                        <span class="mr-2">➕</span> Добавить пользователя
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full">
+                                    <thead class="bg-secondary text-white">
+                                        <tr>
+                                            <th class="py-3 px-4 text-left">№</th>
+                                            <th class="py-3 px-4 text-left">ФИО</th>
+                                            <th class="py-3 px-4 text-left">Email</th>
+                                            <th class="py-3 px-4 text-left">Роль</th>
+                                            <th class="py-3 px-4 text-left">Статус</th>
+                                            <th class="py-3 px-4 text-left">Последний вход</th>
+                                            <th class="py-3 px-4 text-left">Действия</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="border-b hover:bg-gray-50">
+                                            <td class="py-3 px-4">1</td>
+                                            <td class="py-3 px-4 font-medium">Иванов Петр Сергеевич</td>
+                                            <td class="py-3 px-4">ivanovps@student.natc.ru</td>
+                                            <td class="py-3 px-4"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">Студент</span></td>
+                                            <td class="py-3 px-4"><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Активен</span></td>
+                                            <td class="py-3 px-4">10.06.2025 14:32</td>
+                                            <td class="py-3 px-4">
+                                                <button class="text-blue-600 hover:text-blue-800 mr-2">✏️</button>
+                                                <button class="text-red-600 hover:text-red-800">🗑️</button>
+                                            </td>
+                                        </tr>
+                                        <tr class="border-b hover:bg-gray-50">
+                                            <td class="py-3 px-4">2</td>
+                                            <td class="py-3 px-4 font-medium">Иванов Алексей Борисович</td>
+                                            <td class="py-3 px-4">ivanovab@natc.ru</td>
+                                            <td class="py-3 px-4"><span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">Преподаватель</span></td>
+                                            <td class="py-3 px-4"><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Активен</span></td>
+                                            <td class="py-3 px-4">11.06.2025 09:15</td>
+                                            <td class="py-3 px-4">
+                                                <button class="text-blue-600 hover:text-blue-800 mr-2">✏️</button>
+                                                <button class="text-red-600 hover:text-red-800">🗑️</button>
+                                            </td>
+                                        </tr>
+                                        <tr class="border-b hover:bg-gray-50">
+                                            <td class="py-3 px-4">3</td>
+                                            <td class="py-3 px-4 font-medium">Сидорова Екатерина Кирилловна</td>
+                                            <td class="py-3 px-4">sidorovaek@natc.ru</td>
+                                            <td class="py-3 px-4"><span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">Преподаватель</span></td>
+                                            <td class="py-3 px-4"><span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">Неактивен</span></td>
+                                            <td class="py-3 px-4">05.06.2025 16:45</td>
+                                            <td class="py-3 px-4">
+                                                <button class="text-blue-600 hover:text-blue-800 mr-2">✏️</button>
+                                                <button class="text-red-600 hover:text-red-800">🗑️</button>
+                                            </td>
+                                        </tr>
+                                        <tr class="border-b hover:bg-gray-50">
+                                            <td class="py-3 px-4">4</td>
+                                            <td class="py-3 px-4 font-medium">Петров Семен Владимирович</td>
+                                            <td class="py-3 px-4">petrovsv@natc.ru</td>
+                                            <td class="py-3 px-4"><span class="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs">Преподаватель</span></td>
+                                            <td class="py-3 px-4"><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Активен</span></td>
+                                            <td class="py-3 px-4">10.06.2025 11:23</td>
+                                            <td class="py-3 px-4">
+                                                <button class="text-blue-600 hover:text-blue-800 mr-2">✏️</button>
+                                                <button class="text-red-600 hover:text-red-800">🗑️</button>
+                                            </td>
+                                        </tr>
+                                        <tr class="border-b hover:bg-gray-50">
+                                            <td class="py-3 px-4">5</td>
+                                            <td class="py-3 px-4 font-medium">Сидоров Иван Петрович</td>
+                                            <td class="py-3 px-4">sidorovip@natc.ru</td>
+                                            <td class="py-3 px-4"><span class="bg-red-100 text-red-800 px-2 py-1 rounded text-xs">Деканат</span></td>
+                                            <td class="py-3 px-4"><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Активен</span></td>
+                                            <td class="py-3 px-4">11.06.2025 08:45</td>
+                                            <td class="py-3 px-4">
+                                                <button class="text-blue-600 hover:text-blue-800 mr-2">✏️</button>
+                                                <button class="text-red-600 hover:text-red-800">🗑️</button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            
+                            <div class="mt-6 flex justify-between items-center">
+                                <div class="text-gray-600">
+                                    Показано 5 из 47 пользователей
+                                </div>
+                                <div class="flex space-x-2">
+                                    <button class="px-4 py-2 bg-gray-200 text-secondary rounded-lg hover:bg-gray-300 transition">1</button>
+                                    <button class="px-4 py-2 bg-white border border-gray-300 text-secondary rounded-lg hover:bg-gray-100 transition">2</button>
+                                    <button class="px-4 py-2 bg-white border border-gray-300 text-secondary rounded-lg hover:bg-gray-100 transition">3</button>
+                                    <button class="px-4 py-2 bg-white border border-gray-300 text-secondary rounded-lg hover:bg-gray-100 transition">...</button>
+                                    <button class="px-4 py-2 bg-white border border-gray-300 text-secondary rounded-lg hover:bg-gray-100 transition">10</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div class="bg-white rounded-lg shadow p-6 border border-gray-200">
+                                <h4 class="text-lg font-bold text-secondary mb-4">Распределение по ролям</h4>
+                                <div class="flex justify-center mb-6">
+                                    <canvas id="rolesChart" width="300" height="300"></canvas>
+                                </div>
+                                <div class="grid grid-cols-3 gap-4 text-center">
+                                    <div>
+                                        <p class="font-bold text-secondary text-2xl">25</p>
+                                        <p class="text-sm text-gray-600">Студенты</p>
+                                    </div>
+                                    <div>
+                                        <p class="font-bold text-secondary text-2xl">15</p>
+                                        <p class="text-sm text-gray-600">Преподаватели</p>
+                                    </div>
+                                    <div>
+                                        <p class="font-bold text-secondary text-2xl">7</p>
+                                        <p class="text-sm text-gray-600">Сотрудники деканата</p>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="bg-white rounded-lg shadow p-6 border border-gray-200">
+                                <h4 class="text-lg font-bold text-secondary mb-4">Активность пользователей</h4>
+                                <div class="mb-6">
+                                    <canvas id="activityChart" height="200"></canvas>
+                                </div>
+                                <div class="space-y-3">
+                                    <div>
+                                        <div class="flex justify-between mb-1">
+                                            <span class="text-gray-700">Активные пользователи (за 24ч)</span>
+                                            <span class="text-sm text-gray-600">32</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                            <div class="bg-green-500 h-2.5 rounded-full" style="width: 68%"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between mb-1">
+                                            <span class="text-gray-700">Неактивные более месяца</span>
+                                            <span class="text-sm text-gray-600">5</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                            <div class="bg-red-500 h-2.5 rounded-full" style="width: 11%"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="flex justify-between mb-1">
+                                            <span class="text-gray-700">Новые за неделю</span>
+                                            <span class="text-sm text-gray-600">3</span>
+                                        </div>
+                                        <div class="w-full bg-gray-200 rounded-full h-2.5">
+                                            <div class="bg-blue-500 h-2.5 rounded-full" style="width: 6%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                } else if (menuItem === 'Отчётность') {
+                    contentArea.innerHTML = `
+                        <h3 class="text-xl font-bold text-secondary mb-6">Отчетность</h3>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                            <div class="bg-white rounded-lg shadow p-6 border border-gray-200">
+                                <h4 class="text-lg font-bold text-secondary mb-2">Сессия</h4>
+                                <p class="text-3xl font-bold text-secondary">Летняя 2025</p>
+                                <p class="text-gray-600 mt-2">15.06.2025 - 30.06.2025</p>
+                            </div>
+                            <div class="bg-white rounded-lg shadow p-6 border border-gray-200">
+                                <h4 class="text-lg font-bold text-secondary mb-2">Студенты</h4>
+                                <p class="text-3xl font-bold text-secondary">85</p>
+                                <p class="text-gray-600 mt-2">3 группы, 5 специальностей</p>
+                            </div>
+                            <div class="bg-white rounded-lg shadow p-6 border border-gray-200">
+                                <h4 class="text-lg font-bold text-secondary mb-2">Предметы</h4>
+                                <p class="text-3xl font-bold text-secondary">32</p>
+                                <p class="text-gray-600 mt-2">12 преподавателей</p>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-lg shadow p-6 border border-gray-200 mb-8">
+                            <div class="flex justify-between items-center mb-6">
+                                <h4 class="text-lg font-bold text-secondary">Успеваемость по группам</h4>
+                                <div class="flex space-x-2">
+                                    <button class="px-4 py-2 bg-gray-200 text-secondary rounded-lg hover:bg-gray-300 transition">Общий</button>
+                                    <button class="px-4 py-2 bg-accent text-white rounded-lg hover:bg-blue-700 transition">По группам</button>
+                                    <button class="px-4 py-2 bg-gray-200 text-secondary rounded-lg hover:bg-gray-300 transition">По предметам</button>
+                                </div>
+                            </div>
+                            
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full">
+                                    <thead class="bg-secondary text-white">
+                                        <tr>
+                                            <th class="py-3 px-4 text-left">Группа</th>
+                                            <th class="py-3 px-4 text-left">Кол-во студентов</th>
+                                            <th class="py-3 px-4 text-left">Ср. балл</th>
+                                            <th class="py-3 px-4 text-left">Отличники</th>
+                                            <th class="py-3 px-4 text-left">На "хорошо" и "отлично"</th>
+                                            <th class="py-3 px-4 text-left">Имеют задолженности</th>
+                                            <th class="py-3 px-4 text-left">Успеваемость</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="border-b hover:bg-gray-50">
+                                            <td class="py-3 px-4 font-medium">ПР-24.103</td>
+                                            <td class="py-3 px-4">28</td>
+                                            <td class="py-3 px-4 font-bold text-green-600">4.2</td>
+                                            <td class="py-3 px-4">8</td>
+                                            <td class="py-3 px-4">21 (75%)</td>
+                                            <td class="py-3 px-4">3 (11%)</td>
+                                            <td class="py-3 px-4"><span class="bg-green-100 text-green-800 px-2 py-1 rounded">89%</span></td>
+                                        </tr>
+                                        <tr class="border-b hover:bg-gray-50">
+                                            <td class="py-3 px-4 font-medium">ПР-24.102</td>
+                                            <td class="py-3 px-4">25</td>
+                                            <td class="py-3 px-4 font-bold text-green-600">3.8</td>
+                                            <td class="py-3 px-4">3</td>
+                                            <td class="py-3 px-4">15 (60%)</td>
+                                            <td class="py-3 px-4">6 (24%)</td>
+                                            <td class="py-3 px-4"><span class="bg-green-100 text-green-800 px-2 py-1 rounded">76%</span></td>
+                                        </tr>
+                                        <tr class="border-b hover:bg-gray-50">
+                                            <td class="py-3 px-4 font-medium">ПР-24.104</td>
+                                            <td class="py-3 px-4">24</td>
+                                            <td class="py-3 px-4 font-bold text-yellow-600">3.5</td>
+                                            <td class="py-3 px-4">2</td>
+                                            <td class="py-3 px-4">12 (50%)</td>
+                                            <td class="py-3 px-4">8 (33%)</td>
+                                            <td class="py-3 px-4"><span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded">67%</span></td>
+                                        </tr>
+                                        <tr class="border-b hover:bg-gray-50 font-bold">
+                                            <td class="py-3 px-4">Итого</td>
+                                            <td class="py-3 px-4">77</td>
+                                            <td class="py-3 px-4 text-secondary">3.8</td>
+                                            <td class="py-3 px-4">13</td>
+                                            <td class="py-3 px-4">48 (62%)</td>
+                                            <td class="py-3 px-4">17 (22%)</td>
+                                            <td class="py-3 px-4"><span class="bg-green-100 text-green-800 px-2 py-1 rounded">78%</span></td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                            <div class="bg-white rounded-lg shadow p-6 border border-gray-200">
+                                <h4 class="text-lg font-bold text-secondary mb-4">Динамика успеваемости</h4>
+                                <canvas id="performanceChart" height="250"></canvas>
+                            </div>
+                            <div class="bg-white rounded-lg shadow p-6 border border-gray-200">
+                                <h4 class="text-lg font-bold text-secondary mb-4">Распределение оценок</h4>
+                                <canvas id="gradesChart" height="250"></canvas>
+                            </div>
+                        </div>
+                        
+                        <div class="bg-white rounded-lg shadow p-6 border border-gray-200">
+                            <div class="flex justify-between items-center mb-6">
+                                <h4 class="text-lg font-bold text-secondary">Список отчетов</h4>
+                                <button class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg transition flex items-center">
+                                    <span class="mr-2">➕</span> Создать отчет
+                                </button>
+                            </div>
+                            
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full">
+                                    <thead class="bg-secondary text-white">
+                                        <tr>
+                                            <th class="py-3 px-4 text-left">Название отчета</th>
+                                            <th class="py-3 px-4 text-left">Тип</th>
+                                            <th class="py-3 px-4 text-left">Период</th>
+                                            <th class="py-3 px-4 text-left">Дата создания</th>
+                                            <th class="py-3 px-4 text-left">Автор</th>
+                                            <th class="py-3 px-4 text-left">Статус</th>
+                                            <th class="py-3 px-4 text-left">Действия</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr class="border-b hover:bg-gray-50">
+                                            <td class="py-3 px-4 font-medium">Сводный отчет по сессии за июнь 2025</td>
+                                            <td class="py-3 px-4">Сводный</td>
+                                            <td class="py-3 px-4">01.06.2025 - 30.06.2025</td>
+                                            <td class="py-3 px-4">10.06.2025</td>
+                                            <td class="py-3 px-4">Сидоров И.П.</td>
+                                            <td class="py-3 px-4"><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Готов</span></td>
+                                            <td class="py-3 px-4">
+                                                <button class="text-blue-600 hover:text-blue-800 mr-2">📥 Скачать</button>
+                                                <button class="text-red-600 hover:text-red-800">🗑️ Удалить</button>
+                                            </td>
+                                        </tr>
+                                        <tr class="border-b hover:bg-gray-50">
+                                            <td class="py-3 px-4 font-medium">Отчет по успеваемости ПР-24.103</td>
+                                            <td class="py-3 px-4">Групповой</td>
+                                            <td class="py-3 px-4">01.06.2025 - 11.06.2025</td>
+                                            <td class="py-3 px-4">09.06.2025</td>
+                                            <td class="py-3 px-4">Сидоров И.П.</td>
+                                            <td class="py-3 px-4"><span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Готов</span></td>
+                                            <td class="py-3 px-4">
+                                                <button class="text-blue-600 hover:text-blue-800 mr-2">📥 Скачать</button>
+                                                <button class="text-red-600 hover:text-red-800">🗑️ Удалить</button>
+                                            </td>
+                                        </tr>
+                                        <tr class="border-b hover:bg-gray-50">
+                                            <td class="py-3 px-4 font-medium">Анализ успеваемости по Математическому анализу</td>
+                                            <td class="py-3 px-4">Предметный</td>
+                                            <td class="py-3 px-4">01.01.2025 - 11.06.2025</td>
+                                            <td class="py-3 px-4">11.06.2025</td>
+                                            <td class="py-3 px-4">Иванов А.Б.</td>
+                                            <td class="py-3 px-4"><span class="bg-blue-100 text-blue-800 px-2 py-1 rounded text-xs">В процессе</span></td>
+                                            <td class="py-3 px-4">
+                                                <button class="text-blue-600 hover:text-blue-800 mr-2">📥 Скачать</button>
+                                                <button class="text-red-600 hover:text-red-800">🗑️ Удалить</button>
+                                            </td>
+                                        </tr>
+                                        <tr class="border-b hover:bg-gray-50">
+                                            <td class="py-3 px-4 font-medium">Отчет по апелляциям за май-июнь 2025</td>
+                                            <td class="py-3 px-4">Специальный</td>
+                                            <td class="py-3 px-4">01.05.2025 - 11.06.2025</td>
+                                            <td class="py-3 px-4">11.06.2025</td>
+                                            <td class="py-3 px-4">Сидоров И.П.</td>
+                                            <td class="py-3 px-4"><span class="bg-yellow-100 text-yellow-800 px-2 py-1 rounded text-xs">Создается</span></td>
+                                            <td class="py-3 px-4">
+                                                <button class="text-blue-600 hover:text-blue-800 mr-2">📥 Скачать</button>
+                                                <button class="text-red-600 hover:text-red-800">🗑️ Удалить</button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+            
+            // После обновления контента, инициализируем диаграммы, если они есть
+            setTimeout(initCharts, 100);
+        }
+        
+        // Функция для инициализации всех диаграмм
+        function initCharts() {
+            initDepartmentsChart();
+            initSemestersChart();
+            initRolesChart();
+            initActivityChart();
+            initPerformanceChart();
+            initGradesChart();
+        }
+        
+        // Уничтожение существующих диаграмм
+        function destroyCharts() {
+            if (departmentsChart) departmentsChart.destroy();
+            if (semestersChart) semestersChart.destroy();
+            if (rolesChart) rolesChart.destroy();
+            if (activityChart) activityChart.destroy();
+            if (performanceChart) performanceChart.destroy();
+            if (gradesChart) gradesChart.destroy();
+        }
+        
+        // Инициализация диаграмм
+        function initDepartmentsChart() {
+            const ctx = document.getElementById('departmentsChart');
+            if (ctx) {
+                departmentsChart = new Chart(ctx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['Высшая математика', 'Общая физика', 'Информатика'],
+                        datasets: [{
+                            data: [15, 8, 9],
+                            backgroundColor: ['#3182CE', '#38A169', '#DD6B20']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        
+        function initSemestersChart() {
+            const ctx = document.getElementById('semestersChart');
+            if (ctx) {
+                semestersChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['3-й семестр', '4-й семестр', '5-й семестр'],
+                        datasets: [{
+                            label: 'Количество предметов',
+                            data: [12, 15, 5],
+                            backgroundColor: '#3182CE'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 5
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        
+        function initRolesChart() {
+            const ctx = document.getElementById('rolesChart');
+            if (ctx) {
+                rolesChart = new Chart(ctx, {
+                    type: 'pie',
+                    data: {
+                        labels: ['Студенты', 'Преподаватели', 'Сотрудники деканата'],
+                        datasets: [{
+                            data: [25, 15, 7],
+                            backgroundColor: ['#3182CE', '#38A169', '#DD6B20']
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom'
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        
+        function initActivityChart() {
+            const ctx = document.getElementById('activityChart');
+            if (ctx) {
+                activityChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'],
+                        datasets: [{
+                            label: 'Активные пользователи',
+                            data: [28, 31, 29, 33, 35, 25, 27],
+                            borderColor: '#3182CE',
+                            backgroundColor: 'rgba(49, 130, 206, 0.1)',
+                            fill: true,
+                            tension: 0.3
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                ticks: {
+                                    stepSize: 5
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        
+        function initPerformanceChart() {
+            const ctx = document.getElementById('performanceChart');
+            if (ctx) {
+                performanceChart = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: ['Янв', 'Фев', 'Мар', 'Апр', 'Май', 'Июн'],
+                        datasets: [
+                            {
+                                label: 'ПР-24.103',
+                                data: [3.9, 4.0, 4.1, 4.1, 4.2, 4.2],
+                                borderColor: '#3182CE',
+                                backgroundColor: 'rgba(49, 130, 206, 0.1)',
+                                fill: true,
+                                tension: 0.3
+                            },
+                            {
+                                label: 'ПР-24.102',
+                                data: [3.5, 3.6, 3.7, 3.7, 3.8, 3.8],
+                                borderColor: '#38A169',
+                                backgroundColor: 'rgba(56, 161, 105, 0.1)',
+                                fill: true,
+                                tension: 0.3
+                            },
+                            {
+                                label: 'ПР-24.104',
+                                data: [3.3, 3.4, 3.4, 3.5, 3.5, 3.5],
+                                borderColor: '#DD6B20',
+                                backgroundColor: 'rgba(221, 107, 32, 0.1)',
+                                fill: true,
+                                tension: 0.3
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                min: 3.0,
+                                max: 5.0,
+                                ticks: {
+                                    stepSize: 0.5
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+        
+        function initGradesChart() {
+            const ctx = document.getElementById('gradesChart');
+            if (ctx) {
+                gradesChart = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: ['ПР-24.103', 'ПР-24.102', 'ПР-24.104'],
+                        datasets: [
+                            {
+                                label: 'Отлично (5)',
+                                data: [35, 20, 15],
+                                backgroundColor: '#38A169'
+                            },
+                            {
+                                label: 'Хорошо (4)',
+                                data: [40, 40, 35],
+                                backgroundColor: '#3182CE'
+                            },
+                            {
+                                label: 'Удовл. (3)',
+                                data: [20, 30, 40],
+                                backgroundColor: '#DD6B20'
+                            },
+                            {
+                                label: 'Неуд. (2)',
+                                data: [5, 10, 10],
+                                backgroundColor: '#E53E3E'
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                stacked: true,
+                            },
+                            y: {
+                                stacked: true,
+                                beginAtZero: true
+                            }
+                        }
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Корзина | Экзаменационная сессия</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#F5F7FA',
+                        secondary: '#2A4365',
+                        accent: '#3182CE'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['Montserrat', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Montserrat', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-primary min-h-screen flex flex-col">
+    <header class="bg-secondary text-white py-4 shadow-md">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold">Экзаменационная сессия</h1>
+            <nav>
+                <ul class="flex space-x-6">
+                    <li><a href="../index.html" class="hover:text-accent transition">Главная</a></li>
+                    <li><a href="login.html" class="hover:text-accent transition">Вход</a></li>
+                    <li><a href="register.html" class="hover:text-accent transition">Регистрация</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-grow container mx-auto px-4 py-12">
+        <div class="max-w-4xl mx-auto">
+            <div class="bg-white rounded-lg shadow-md p-6 mb-8">
+                <h2 class="text-2xl font-bold text-secondary mb-6">Корзина/Буфер обмена</h2>
+                
+                <div class="border rounded-lg overflow-hidden mb-6">
+                    <div class="bg-secondary text-white px-4 py-3 flex justify-between items-center">
+                        <h3 class="font-bold">Список элементов в корзине</h3>
+                        <span class="bg-white text-secondary text-xs px-2 py-1 rounded">5 элементов</span>
+                    </div>
+                    <div class="divide-y">
+                        <div class="p-4 flex items-center justify-between hover:bg-gray-50">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                                    <span class="text-blue-800 font-bold">С</span>
+                                </div>
+                                <div>
+                                    <p class="font-medium">Студент: Иванов Петр Сергеевич</p>
+                                    <p class="text-sm text-gray-500">Группа: ПР-24.103 | № зач. книжки: 2410315</p>
+                                </div>
+                            </div>
+                            <button class="text-red-600 hover:text-red-800">
+                                <span>×</span> Удалить
+                            </button>
+                        </div>
+                        <div class="p-4 flex items-center justify-between hover:bg-gray-50">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                                    <span class="text-green-800 font-bold">П</span>
+                                </div>
+                                <div>
+                                    <p class="font-medium">Предмет: Математический анализ</p>
+                                    <p class="text-sm text-gray-500">Кафедра: Высшая математика | Семестр: 4</p>
+                                </div>
+                            </div>
+                            <button class="text-red-600 hover:text-red-800">
+                                <span>×</span> Удалить
+                            </button>
+                        </div>
+                        <div class="p-4 flex items-center justify-between hover:bg-gray-50">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-purple-100 rounded-full flex items-center justify-center mr-4">
+                                    <span class="text-purple-800 font-bold">Э</span>
+                                </div>
+                                <div>
+                                    <p class="font-medium">Экзамен: Физика</p>
+                                    <p class="text-sm text-gray-500">Дата: 17.06.2025 | Время: 11:00 | Аудитория: 210</p>
+                                </div>
+                            </div>
+                            <button class="text-red-600 hover:text-red-800">
+                                <span>×</span> Удалить
+                            </button>
+                        </div>
+                        <div class="p-4 flex items-center justify-between hover:bg-gray-50">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center mr-4">
+                                    <span class="text-yellow-800 font-bold">П</span>
+                                </div>
+                                <div>
+                                    <p class="font-medium">Преподаватель: Петров Семен Владимирович</p>
+                                    <p class="text-sm text-gray-500">Кафедра: Общая физика | Предметы: Физика</p>
+                                </div>
+                            </div>
+                            <button class="text-red-600 hover:text-red-800">
+                                <span>×</span> Удалить
+                            </button>
+                        </div>
+                        <div class="p-4 flex items-center justify-between hover:bg-gray-50">
+                            <div class="flex items-center">
+                                <div class="w-10 h-10 bg-red-100 rounded-full flex items-center justify-center mr-4">
+                                    <span class="text-red-800 font-bold">Г</span>
+                                </div>
+                                <div>
+                                    <p class="font-medium">Группа: ПР-24.104</p>
+                                    <p class="text-sm text-gray-500">Курс: 2 | Студентов: 24 | Специальность: Программирование</p>
+                                </div>
+                            </div>
+                            <button class="text-red-600 hover:text-red-800">
+                                <span>×</span> Удалить
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                    <div class="bg-blue-50 rounded-lg p-6 border border-blue-200">
+                        <h3 class="font-bold text-blue-800 mb-3">💡 Для чего используется корзина?</h3>
+                        <ul class="list-disc pl-5 space-y-2 text-blue-800">
+                            <li>Временное хранение элементов для массовых операций</li>
+                            <li>Создание копий расписаний или ведомостей</li>
+                            <li>Быстрый доступ к часто используемым элементам</li>
+                            <li>Подготовка данных для формирования отчетов</li>
+                        </ul>
+                    </div>
+                    <div class="bg-green-50 rounded-lg p-6 border border-green-200">
+                        <h3 class="font-bold text-green-800 mb-3">✅ Доступные действия</h3>
+                        <div class="grid grid-cols-2 gap-3">
+                            <button class="bg-green-100 hover:bg-green-200 text-green-800 px-4 py-2 rounded-lg transition text-sm">
+                                Массовое удаление
+                            </button>
+                            <button class="bg-green-100 hover:bg-green-200 text-green-800 px-4 py-2 rounded-lg transition text-sm">
+                                Копирование
+                            </button>
+                            <button class="bg-green-100 hover:bg-green-200 text-green-800 px-4 py-2 rounded-lg transition text-sm">
+                                Перемещение
+                            </button>
+                            <button class="bg-green-100 hover:bg-green-200 text-green-800 px-4 py-2 rounded-lg transition text-sm">
+                                Экспорт в Excel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex justify-between items-center border-t pt-6">
+                    <div class="text-gray-600">
+                        <p>Выбрано элементов: <span class="font-bold text-secondary">5</span></p>
+                    </div>
+                    <div class="flex space-x-4">
+                        <button class="bg-gray-300 hover:bg-gray-400 text-secondary font-bold py-2 px-6 rounded-lg transition">
+                            Очистить всё
+                        </button>
+                        <button class="bg-accent hover:bg-blue-700 text-white font-bold py-2 px-6 rounded-lg transition">
+                            Применить операции
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h3 class="text-xl font-bold text-secondary mb-4">История операций с корзиной</h3>
+                
+                <div class="space-y-4">
+                    <div class="flex items-start border-b pb-4 last:border-b-0">
+                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0">
+                            <span class="text-blue-800 font-bold text-sm">1</span>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex justify-between items-start mb-1">
+                                <p class="font-medium text-gray-800">Добавление группы ПР-24.104</p>
+                                <span class="text-sm text-gray-500">15 мин назад</span>
+                            </div>
+                            <p class="text-sm text-gray-600">Добавлено 24 студента из группы ПР-24.104 в корзину для последующего формирования ведомости</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start border-b pb-4 last:border-b-0">
+                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0">
+                            <span class="text-blue-800 font-bold text-sm">2</span>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex justify-between items-start mb-1">
+                                <p class="font-medium text-gray-800">Добавление преподавателя Петрова С.В.</p>
+                                <span class="text-sm text-gray-500">45 мин назад</span>
+                            </div>
+                            <p class="text-sm text-gray-600">Добавлен преподаватель для распределения по экзаменам по физике</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start border-b pb-4 last:border-b-0">
+                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0">
+                            <span class="text-blue-800 font-bold text-sm">3</span>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex justify-between items-start mb-1">
+                                <p class="font-medium text-gray-800">Добавление экзамена по Физике</p>
+                                <span class="text-sm text-gray-500">1 час назад</span>
+                            </div>
+                            <p class="text-sm text-gray-600">Добавлен экзамен по дисциплине "Физика" для групп ПР-24.102 и ПР-24.103</p>
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-start">
+                        <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3 mt-1 flex-shrink-0">
+                            <span class="text-blue-800 font-bold text-sm">4</span>
+                        </div>
+                        <div class="flex-1">
+                            <div class="flex justify-between items-start mb-1">
+                                <p class="font-medium text-gray-800">Добавление предмета "Математический анализ"</p>
+                                <span class="text-sm text-gray-500">2 часа назад</span>
+                            </div>
+                            <p class="text-sm text-gray-600">Добавлен предмет для формирования расписания экзаменов</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-6 flex justify-end">
+                    <button class="bg-gray-200 hover:bg-gray-300 text-secondary px-4 py-2 rounded-lg transition">
+                        Просмотреть всю историю
+                    </button>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-secondary text-white py-6 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p>© 2025 Экзаменационная сессия. Все права защищены.</p>
+            <p class="mt-2">ГБПОУ НСО «Новосибирский авиационный технический колледж имени Б.С. Галущака»</p>
+        </div>
+    </footer>
+    <script src="../js/theme.js"></script>
+</body>
+</html>

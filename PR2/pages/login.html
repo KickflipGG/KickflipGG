@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Авторизация | Экзаменационная сессия</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Montserrat:wght@500;600;700&display=swap" rel="stylesheet">
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#F5F7FA',
+                        secondary: '#2A4365',
+                        accent: '#3182CE'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        heading: ['Montserrat', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        h1, h2, h3, h4, h5, h6 {
+            font-family: 'Montserrat', sans-serif;
+        }
+    </style>
+</head>
+<body class="bg-primary min-h-screen flex flex-col">
+    <header class="bg-secondary text-white py-4 shadow-md">
+        <div class="container mx-auto px-4 flex justify-between items-center">
+            <h1 class="text-2xl font-bold">Экзаменационная сессия</h1>
+            <nav>
+                <ul class="flex space-x-6">
+                    <li><a href="../index.html" class="hover:text-accent transition">Главная</a></li>
+                    <li><a href="#" class="text-accent font-semibold">Вход</a></li>
+                    <li><a href="register.html" class="hover:text-accent transition">Регистрация</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main class="flex-grow container mx-auto px-4 py-12 flex justify-center items-center">
+        <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">
+            <h2 class="text-3xl font-bold text-center mb-8 text-secondary">Авторизация</h2>
+            
+            <form id="loginForm">
+                <div class="mb-6">
+                    <label for="email" class="block text-gray-700 font-medium mb-2">Email или логин</label>
+                    <input type="text" id="email" name="email" required 
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent">
+                </div>
+                
+                <div class="mb-6">
+                    <label for="password" class="block text-gray-700 font-medium mb-2">Пароль</label>
+                    <input type="password" id="password" name="password" required
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent">
+                </div>
+                
+                <div class="mb-6">
+                    <label class="block text-gray-700 font-medium mb-2">Роль в системе</label>
+                    <div class="space-y-2">
+                        <label class="flex items-center">
+                            <input type="radio" name="role" value="student" class="form-radio text-accent" checked>
+                            <span class="ml-2">Студент</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="role" value="teacher" class="form-radio text-accent">
+                            <span class="ml-2">Преподаватель</span>
+                        </label>
+                        <label class="flex items-center">
+                            <input type="radio" name="role" value="dean" class="form-radio text-accent">
+                            <span class="ml-2">Сотрудник деканата</span>
+                        </label>
+                    </div>
+                </div>
+                
+                <button type="submit" 
+                        class="w-full bg-accent hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 shadow-md mb-4">
+                    Войти в систему
+                </button>
+            </form>
+            
+            <div class="text-center mt-4">
+                <a href="#" class="text-accent hover:text-blue-700 font-medium">Забыли пароль?</a>
+                <p class="mt-4">Нет аккаунта? <a href="register.html" class="text-accent hover:text-blue-700 font-medium">Зарегистрироваться</a></p>
+            </div>
+        </div>
+    </main>
+
+    <footer class="bg-secondary text-white py-6 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p>© 2025 Экзаменационная сессия. Все права защищены.</p>
+            <p class="mt-2">ГБПОУ НСО «Новосибирский авиационный технический колледж имени Б.С. Галущака»</p>
+        </div>
+    </footer>
+
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const role = document.querySelector('input[name="role"]:checked').value;
+            
+            // Сохраняем роль пользователя в localStorage
+            localStorage.setItem('userRole', role);
+            localStorage.setItem('isAuthenticated', 'true');
+            
+            // Перенаправляем на профиль с учетом роли
+            window.location.href = "profile.html";
+        });
+    </script>
+    <script src="../js/theme.js"></script>
+</body>
+</html>
